@@ -12,16 +12,29 @@ namespace SudokuSolver
         private const int SudokuSize = 9;
         private const int SudokuBlockSize = 3;
         private Random rnd;
+        private Dictionary<int, int> rowDict;
+        private Dictionary<int, int> colDict;
 
         public Sudoku(string input)
         {
             rnd = new Random();
+            rowDict = new Dictionary<int, int>();
+            colDict = new Dictionary<int, int>();
             this.nodeArray = new SudokuNode[9, 9];
             ConvertInputToNodeArray(input);
             PopulateNodeArray();
             PrintSudoku();
             SolveSudoku();
             PrintSudoku();
+        }
+        private static int CalculateRow(int i, int h)
+        {
+            return 3 * (h / 3) + i;
+        }
+
+        private static int CalculateColumn(int j, int h)
+        {
+            return 3 * (h % 3) + j;
         }
 
         private void ConvertInputToNodeArray(string input)
@@ -77,6 +90,9 @@ namespace SudokuSolver
                 }
                 numbersAlreadyInBlock.Clear();
             }
+
+            // Populate the row & col dictionaries
+            EvaluateSudoku();
         }
 
         private void PrintSudoku()
@@ -103,6 +119,7 @@ namespace SudokuSolver
 
         private void SolveSudoku()
         {
+            // While sudoku is not solved
             int h = rnd.Next(0, 9);
             ((int i, int j) firstNode, (int k, int l) secondNode, int h, int diff) bestSwap = default;
 
@@ -121,7 +138,7 @@ namespace SudokuSolver
                                 // check if node is not fixed and check that it's not equal to itself
                                 if (!nodeArray[(3 * (h / 3) + i), (3 * (h % 3) + j)].IsFixed() && !(i == k && j == l))
                                 {
-                                    int currDiff = SwapNodes((i, j), (k, l), h);
+                                    int currDiff = GetSwapEvaluation((i, j), (k, l), h);
                                     if (bestSwap == default || currDiff < bestSwap.diff)
                                     {
                                         bestSwap = ((i, j), (k, l), h, currDiff);
@@ -132,7 +149,17 @@ namespace SudokuSolver
                     }
                 }
             }
-            //TODO: refactor
+            if (bestSwap.diff == 0)
+            {
+                // Check if solved
+                if (GetEvaluationValue() == 0) {
+                    // Sudoku is solved
+                } else
+                {
+                    // Random walk S times (experiment with S)
+                }
+            }
+            //TODO: refactor and update evaluations in dict
             (nodeArray[CalculateRow(bestSwap.firstNode.i, bestSwap.h), CalculateColumn(bestSwap.firstNode.j, bestSwap.h)],
                 nodeArray[CalculateRow(bestSwap.secondNode.k, bestSwap.h), CalculateColumn(bestSwap.secondNode.l, bestSwap.h)]) =
                 (nodeArray[CalculateRow(bestSwap.secondNode.k, bestSwap.h), CalculateColumn(bestSwap.secondNode.l, bestSwap.h)],
@@ -140,17 +167,43 @@ namespace SudokuSolver
             Console.WriteLine(bestSwap.diff);
         }
 
-        private int CalculateRow(int i, int h)
+        private void EvaluateSudoku()
         {
-            return 3 * (h / 3) + i;
+            HashSet<int> valuesFound;
+            // Check rows
+            for (int i = 0; i < SudokuSize; i++)
+            {
+                valuesFound = new HashSet<int>();
+                for (int j = 0; j < SudokuSize; j++)
+                {
+                    valuesFound.Add(nodeArray[i, j].Value());
+                }
+                rowDict[i] = SudokuSize - valuesFound.Count();
+            }
+
+            // Check cols
+            for (int i = 0; i < SudokuSize; i++)
+            {
+                valuesFound = new HashSet<int>();
+                for (int j = 0; j < SudokuSize; j++)
+                {
+                    valuesFound.Add(nodeArray[i, j].Value());
+                }
+                colDict[i] = SudokuSize - valuesFound.Count();
+            }
         }
 
-        private int CalculateColumn(int j, int h)
+        private int GetEvaluationValue()
         {
-            return 3 * (h % 3) + j;
+            return rowDict.Sum(x => x.Value) + colDict.Sum(x => x.Value);
         }
 
-        private int Evaluate(List<int> list)
+        private int GetLocalEvaluationValue(List<int> list)
+        {
+            return 0;
+        }
+
+        private int UpdateEvaluation(List<int> list)
         {
             int evaluationValue = 0;
             HashSet<int> valuesFound;
@@ -158,31 +211,32 @@ namespace SudokuSolver
             foreach (int i in list)
             {
                 valuesFound = new HashSet<int>();
-                for (int j = 0; j < 9; j++)
+                for (int j = 0; j < SudokuSize; j++)
                 {
                     valuesFound.Add(nodeArray[i, j].Value());
                 }
-                evaluationValue += 9 - valuesFound.Count();
+                evaluationValue += SudokuSize - valuesFound.Count();
             }
             return evaluationValue;
         }
 
-        private int SwapNodes((int i, int j) firstNode, (int k, int l) secondNode, int h)
+        private int GetSwapEvaluation((int i, int j) firstNode, (int k, int l) secondNode, int h)
         {
             int i = (3 * (h / 3) + firstNode.i), j = (3 * (h % 3) + firstNode.j);
             int k = (3 * (h / 3) + secondNode.k), l = (3 * (h % 3) + secondNode.l);
             List<int> rows = new List<int>() { (i == k) ? i : i, k};
             List<int> cols = new List<int>() { (j == l) ? j : j, l };
 
+            // Get value from dict
             int currentEvaluationValue = 0;
-            currentEvaluationValue += Evaluate(rows);
-            currentEvaluationValue += Evaluate(cols);
+            currentEvaluationValue += GetLocalEvaluationValue(rows);
+            currentEvaluationValue += GetLocalEvaluationValue(cols);
 
             (nodeArray[i, j], nodeArray[k, l]) = (nodeArray[k, l], nodeArray[i, j]); // Swap
 
             int newEvaluationValue = 0;
-            newEvaluationValue += Evaluate(rows);
-            newEvaluationValue += Evaluate(cols);
+            newEvaluationValue += UpdateEvaluation(rows);
+            newEvaluationValue += UpdateEvaluation(cols);
 
             (nodeArray[i, j], nodeArray[k, l]) = (nodeArray[k, l], nodeArray[i, j]); // Swap
 

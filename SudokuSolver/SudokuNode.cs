@@ -16,5 +16,15 @@ namespace SudokuSolver
             this.value = value;
             this.isFixed = isFixed;
         }
+
+        public bool IsFixed()
+        {
+            return isFixed;
+        }
+
+        public int Value()
+        {
+            return value;
+        }
     }
 }

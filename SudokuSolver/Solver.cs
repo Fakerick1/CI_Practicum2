@@ -11,7 +11,7 @@ namespace SudokuSolver
         Sudoku sudoku;
         string[] inputs;
 
-        public Solver(int input)
+        public Solver(int input, int sValue, int maxPlateauRepetitions)
         {
             this.inputs = new string[5];
             this.inputs[0] = " 0 0 3 0 2 0 6 0 0 9 0 0 3 0 5 0 0 1 0 0 1 8 0 6 4 0 0 0 0 8 1 0 2 9 0 0 7 0 0 0 0 0 0 0 8 0 0 6 7 0 8 2 0 0 0 0 2 6 0 9 5 0 0 8 0 0 2 0 3 0 0 9 0 0 5 0 1 0 3 0 0";
@@ -20,8 +20,7 @@ namespace SudokuSolver
             this.inputs[3] = " 0 3 0 0 5 0 0 4 0 0 0 8 0 1 0 5 0 0 4 6 0 0 0 0 0 1 2 0 7 0 5 0 2 0 8 0 0 0 0 6 0 3 0 0 0 0 4 0 1 0 9 0 3 0 2 5 0 0 0 0 0 9 8 0 0 1 0 2 0 6 0 0 0 8 0 0 6 0 0 2 0";
             this.inputs[4] = " 0 2 0 8 1 0 7 4 0 7 0 0 0 0 3 1 0 0 0 9 0 0 0 2 8 0 5 0 0 9 0 4 0 0 8 7 4 0 0 2 0 8 0 0 3 1 6 0 0 3 0 2 0 0 3 0 2 7 0 0 0 6 0 0 0 5 6 0 0 0 0 8 0 7 6 0 5 1 0 9 0";
 
-            this.sudoku = new Sudoku(this.inputs[input], 10);
-
+            this.sudoku = new Sudoku(this.inputs[input], sValue, maxPlateauRepetitions);
         }
     }
 }

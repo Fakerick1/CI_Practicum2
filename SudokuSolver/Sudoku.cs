@@ -8,7 +8,6 @@ namespace SudokuSolver
 {
     public class Sudoku
     {
-
         private const int SudokuSize = 9;
         private const int SudokuBlockSize = 3;
 
@@ -20,10 +19,11 @@ namespace SudokuSolver
         private int sValue;
         private int maxPlateauRepetitions;
         private int subsequentZeroes;
+        private int amountOfSteps;
 
-        public Sudoku(string input, int sValue, int maxPlateauRepetitions)
+        public Sudoku(string input, int sValue, int maxPlateauRepetitions, Random rnd)
         {
-            rnd = new Random();
+            this.rnd = rnd;
             correctRows = new HashSet<int>();
             correctColumns = new HashSet<int>();
             this.nodeArray = new SudokuNode[9, 9];
@@ -31,25 +31,30 @@ namespace SudokuSolver
             this.maxPlateauRepetitions = maxPlateauRepetitions;
             this.subsequentZeroes = 0;
             this.plateauBlocks = new HashSet<int>();
+            this.amountOfSteps = 0;
 
             // Generate and display starting state
             ConvertInputToNodeArray(input);
             PopulateNodeArray();
-            PrintSudoku();
+            //PrintSudoku();
 
             // Evaluate heuristic function
             EvaluateSudoku();
 
-            int amountOfSteps = 0;
             while (GetHeuristicValue() < 18)
             {
                 ProcessBestSuccessor(GenerateBestSuccessor());
-                Console.WriteLine("Heuristic value: {0}, rows: {1}, cols: {2}", GetHeuristicValue(), correctRows.Count, correctColumns.Count);
+                //Console.WriteLine("Heuristic value: {0}, rows: {1}, cols: {2}", GetHeuristicValue(), correctRows.Count, correctColumns.Count);
                 amountOfSteps++;
             }
-            Console.WriteLine(String.Format("Sudoku solved! Took: {0} steps.", amountOfSteps));
+            //Console.WriteLine(String.Format("Sudoku solved! Took: {0} steps.", amountOfSteps));
            
-            PrintSudoku();
+            //PrintSudoku();
+        }
+
+        public int GetAmountOfSteps()
+        {
+            return amountOfSteps;
         }
 
         private int GetHeuristicValue()
@@ -120,7 +125,7 @@ namespace SudokuSolver
 
                                     while (numbersAlreadyInBlock.Contains(randomNumber))
                                     {
-                                        randomNumber = new Random().Next(1, 10);
+                                        randomNumber = rnd.Next(1, 10);
                                     }
                                     nodeArray[CalculateRow(i, h), CalculateColumn(j, h)] = new SudokuNode(randomNumber, false);
                                     numbersAlreadyInBlock.Add(randomNumber);
@@ -212,7 +217,7 @@ namespace SudokuSolver
                 // Check if solved
                 if (plateauBlocks.Count == 9)
                 {
-                    Console.WriteLine("Random walk, reason: plateaublocks = 9");
+                    //Console.WriteLine("Random walk, reason: plateaublocks = 9");
                     RandomWalk();
                     plateauBlocks.Clear();
                 }
@@ -223,7 +228,7 @@ namespace SudokuSolver
 
                 if (this.subsequentZeroes >= this.maxPlateauRepetitions)
                 {
-                    Console.WriteLine("Random walk, reason: subsequent zeroes >= max");
+                    //Console.WriteLine("Random walk, reason: subsequent zeroes >= max");
                     RandomWalk();
                     this.subsequentZeroes = 0;
                 }

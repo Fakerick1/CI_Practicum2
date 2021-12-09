@@ -223,16 +223,20 @@ namespace SudokuSolver
 
                 if (this.subsequentZeroes >= this.maxPlateauRepetitions)
                 {
-                    Console.WriteLine("Random walk, reason: subsequent zeroes > max");
+                    Console.WriteLine("Random walk, reason: subsequent zeroes >= max");
                     RandomWalk();
                     this.subsequentZeroes = 0;
                 }
                 else
                 {
+                    if (bestSwap.diff > 0)
+                    {
+                        this.subsequentZeroes = 0;
+                    }
                     SwapNodes(bestSwap.firstNode.i, bestSwap.firstNode.j, bestSwap.secondNode.k, bestSwap.secondNode.l, bestSwap.h);
                     plateauBlocks.Clear();
-                    UpdateHeuristics(new List<int>() { CalculateRow(bestSwap.firstNode.i, bestSwap.h), CalculateColumn(bestSwap.secondNode.k, bestSwap.h) }, true);
-                    UpdateHeuristics(new List<int>() { CalculateRow(bestSwap.firstNode.j, bestSwap.h), CalculateColumn(bestSwap.secondNode.l, bestSwap.h) }, false);
+                    UpdateHeuristics(new List<int>() { CalculateRow(bestSwap.firstNode.i, bestSwap.h), CalculateRow(bestSwap.secondNode.k, bestSwap.h) }, true);
+                    UpdateHeuristics(new List<int>() { CalculateColumn(bestSwap.firstNode.j, bestSwap.h), CalculateColumn(bestSwap.secondNode.l, bestSwap.h) }, false);
                 }
 
             }

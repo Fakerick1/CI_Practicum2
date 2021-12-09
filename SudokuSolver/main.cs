@@ -10,7 +10,7 @@ namespace SudokuSolver
     {
         static void Main(string[] args)
         {
-            Solver solver = new Solver(1, 2, 10);
+            Solver solver = new Solver(1, 2, 15);
         }
     }
 }

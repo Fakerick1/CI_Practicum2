@@ -251,7 +251,6 @@ namespace SudokuSolver
 
         private void RandomWalk()
         {
-            int h; // block
             int i, j, k, l; //coordinates in block;
 
             // s times do

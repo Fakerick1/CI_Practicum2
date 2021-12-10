@@ -11,18 +11,20 @@ namespace SudokuSolver
         private const int SudokuSize = 9;
         private const int SudokuBlockSize = 3;
 
-        public SudokuNode[,] nodeArray;
+        private SudokuNode[,] nodeArray;
         private Random rnd;
         private HashSet<int> correctRows;
         private HashSet<int> correctColumns;
         private HashSet<int> plateauBlocks;
+
         private int sValue;
         private int maxPlateauRepetitions;
         private int subsequentZeroes;
         private int amountOfSteps;
         private int currentBlockIndex;
+        private bool printOutput;
 
-        public Sudoku(string input, int sValue, int maxPlateauRepetitions, Random rnd)
+        public Sudoku(string input, int sValue, int maxPlateauRepetitions, Random rnd, bool printOutput)
         {
             this.rnd = rnd;
             correctRows = new HashSet<int>();
@@ -33,24 +35,25 @@ namespace SudokuSolver
             this.subsequentZeroes = 0;
             this.plateauBlocks = new HashSet<int>();
             this.amountOfSteps = 0;
+            this.printOutput = printOutput;
 
             // Generate and display starting state
             ConvertInputToNodeArray(input);
             PopulateNodeArray();
-            //PrintSudoku();
 
             // Evaluate heuristic function
             EvaluateSudoku();
+        }
 
+        public void Solve()
+        {
+            // As long as the sudoku is not solved, generate successors and swap the best successor
             while (GetHeuristicValue() < 18)
             {
                 ProcessBestSuccessor(GenerateBestSuccessor());
-                //Console.WriteLine("Heuristic value: {0}, rows: {1}, cols: {2}", GetHeuristicValue(), correctRows.Count, correctColumns.Count);
+                if (this.printOutput) Console.WriteLine("Heuristic value: {0}, rows: {1}, cols: {2}", this.GetHeuristicValue(), this.correctRows.Count, this.correctColumns.Count);
                 amountOfSteps++;
             }
-            //Console.WriteLine(String.Format("Sudoku solved! Took: {0} steps.", amountOfSteps));
-           
-            //PrintSudoku();
         }
 
         public int GetAmountOfSteps()
@@ -62,6 +65,7 @@ namespace SudokuSolver
         {
             return correctRows.Count + correctColumns.Count;
         }
+
         private SudokuNode GetNodeAtPosition(int i, int j)
         {
             return nodeArray[CalculateRow(i), CalculateColumn(j)];
@@ -76,7 +80,6 @@ namespace SudokuSolver
         {
             return 3 * (this.currentBlockIndex % 3) + j;
         }
-
 
         private void ConvertInputToNodeArray(string input)
         {
@@ -142,7 +145,7 @@ namespace SudokuSolver
 
         }
 
-        private void PrintSudoku()
+        public void PrintSudoku()
         {
             // For each row
             for (int i = 0; i < SudokuSize; i++)
@@ -212,36 +215,43 @@ namespace SudokuSolver
 
         private void ProcessBestSuccessor(((int i, int j) firstNode, (int k, int l) secondNode, int diff) bestSwap)
         {
-            // BestSwap is worse
+            // Best available swap evaluates to a lower heuristic value than the current state
             if (bestSwap.diff < 0)
             {
                 plateauBlocks.Add(this.currentBlockIndex);
-                // Check if solved
+                // If there is no better successor in each of the 9 blocks, random walk
                 if (plateauBlocks.Count == 9)
                 {
-                    //Console.WriteLine("Random walk, reason: plateaublocks = 9");
+                    if (this.printOutput) Console.WriteLine("Random walk, reason: plateaublocks = 9");
                     RandomWalk();
                     plateauBlocks.Clear();
                 }
             }
             else
-            {   // If evaluation of successor state is equal to that of current state
+            {
+                // If evaluation of successor state is equal to that of current state
                 if (bestSwap.diff == 0) this.subsequentZeroes++;
 
                 if (this.subsequentZeroes >= this.maxPlateauRepetitions)
                 {
-                    //Console.WriteLine("Random walk, reason: subsequent zeroes >= max");
+                    // If a plateau has been reached and the algorithm is stuck on it for a predefined amount of steps, random walk
+                    if (this.printOutput) Console.WriteLine("Random walk, reason: subsequent zeroes >= max");
                     RandomWalk();
                     this.subsequentZeroes = 0;
                 }
                 else
                 {
+                    // Best possible successor is better than current state
                     if (bestSwap.diff > 0)
                     {
                         this.subsequentZeroes = 0;
                     }
-                    SwapNodes(bestSwap.firstNode.i, bestSwap.firstNode.j, bestSwap.secondNode.k, bestSwap.secondNode.l);
                     plateauBlocks.Clear();
+
+                    // Swap if best successor is better or equal to current state
+                    SwapNodes(bestSwap.firstNode.i, bestSwap.firstNode.j, bestSwap.secondNode.k, bestSwap.secondNode.l);
+                    
+                    // Update the evaluation function after the swap
                     UpdateHeuristics(new List<int>() { CalculateRow(bestSwap.firstNode.i), CalculateRow(bestSwap.secondNode.k) }, true);
                     UpdateHeuristics(new List<int>() { CalculateColumn(bestSwap.firstNode.j), CalculateColumn(bestSwap.secondNode.l) }, false);
                 }
@@ -251,6 +261,7 @@ namespace SudokuSolver
 
         private void RandomWalk()
         {
+            // TODO: Revise comments/code from here
             int i, j, k, l; //coordinates in block;
 
             // s times do

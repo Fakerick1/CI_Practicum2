@@ -8,18 +8,63 @@ namespace SudokuSolver
 {
     public class Solver
     {
-        Sudoku sudoku;
-        int result;
+        List<String> inputs;
+        int amountOfRuns;
+        int[] sValues;
+        int[] plateauValues;
+        bool printOutput = false;
 
-        public Solver(string input, int sValue, int maxPlateauRepetitions, Random rnd)
+        public Solver(List<String> inputs) : this(inputs, 1, new int[] { 2 }, new int[] { 10 }) {
+            printOutput = true;
+        }
+        
+        public Solver(List<String> inputs, int amountOfRuns, int[] sValues, int[] plateauValues) 
         {
-            this.sudoku = new Sudoku(input, sValue, maxPlateauRepetitions, rnd);
-            this.result = this.sudoku.GetAmountOfSteps();
+            this.inputs = inputs;
+            this.amountOfRuns = amountOfRuns;
+            this.sValues = sValues;
+            this.plateauValues = plateauValues;
         }
 
-        public int GetResult()
+        public void Execute()
         {
-            return this.result;
+            DateTime start = DateTime.Now;
+
+            int maxIterations = (sValues.Length * plateauValues.Length * inputs.Count);
+            StringBuilder csv = new StringBuilder();
+
+            for (int i = 0; i < amountOfRuns; i++)
+            {
+                Console.WriteLine("Run: {0}", i);
+                // Solve every given sudoku with a seeded random value for every combination of parameter values and save to csv
+                Random rnd = new Random();
+                int iterationCounter = 0;
+                for (int j = 0; j < sValues.Length; j++)
+                {
+                    for (int k = 0; k < plateauValues.Length; k++)
+                    {
+                        for (int l = 0; l < inputs.Count; l++)
+                        {
+                            // Create sudoku with the current parameter configuration
+                            Sudoku sudoku = new Sudoku(inputs.ElementAt(l), sValues[j], plateauValues[k], rnd, this.printOutput);
+                            if (printOutput) sudoku.PrintSudoku();
+                            sudoku.Solve();
+
+                            iterationCounter++;
+
+                            // Create and show string with information on the solved sudoku
+                            string line = $"{l},{sValues[j]},{plateauValues[k]},{sudoku.GetAmountOfSteps()}";
+                            csv.AppendLine(line);
+                            Console.WriteLine(String.Format("Sudoku solved! Took: {0} steps. Iteration {1}/{2}", sudoku.GetAmountOfSteps(), iterationCounter, maxIterations));
+                            if (printOutput) sudoku.PrintSudoku();
+
+                        }
+                    }
+                }
+                Console.WriteLine("Elapsed: {0}", (DateTime.Now - start).Minutes);
+            }
+            // Relative path to root folder
+            File.WriteAllText("..\\..\\..\\result.csv", csv.ToString());
         }
     }
 }

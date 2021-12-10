@@ -20,6 +20,7 @@ namespace SudokuSolver
         private int maxPlateauRepetitions;
         private int subsequentZeroes;
         private int amountOfSteps;
+        private int currentBlockIndex;
 
         public Sudoku(string input, int sValue, int maxPlateauRepetitions, Random rnd)
         {
@@ -61,19 +62,19 @@ namespace SudokuSolver
         {
             return correctRows.Count + correctColumns.Count;
         }
-        private SudokuNode GetNodeAtPosition(int i, int j, int h)
+        private SudokuNode GetNodeAtPosition(int i, int j)
         {
-            return nodeArray[CalculateRow(i, h), CalculateColumn(j, h)];
+            return nodeArray[CalculateRow(i), CalculateColumn(j)];
         }
 
-        private int CalculateRow(int i, int h)
+        private int CalculateRow(int i)
         {
-            return 3 * (h / 3) + i;
+            return 3 * (this.currentBlockIndex / 3) + i;
         }
 
-        private int CalculateColumn (int j, int h)
+        private int CalculateColumn (int j)
         {
-            return 3 * (h % 3) + j;
+            return 3 * (this.currentBlockIndex % 3) + j;
         }
 
 
@@ -104,6 +105,7 @@ namespace SudokuSolver
             // for loop for each 3x3 block
             for (int h = 0; h < 9; h++)
             {
+                this.currentBlockIndex = h;
                 //loop 2 times through each 3x3 block. first time placing all static numbers in the block, second time placing all random generated numbers
                 for (int g = 0; g < 2; g++)
                 {
@@ -113,9 +115,9 @@ namespace SudokuSolver
                         //for loop for columns
                         for (int j = 0; j < SudokuBlockSize; j++)
                         {
-                            if (GetNodeAtPosition(i, j, h) != null)
+                            if (GetNodeAtPosition(i, j) != null)
                             {
-                                numbersAlreadyInBlock.Add(GetNodeAtPosition(i, j, h).Value());
+                                numbersAlreadyInBlock.Add(GetNodeAtPosition(i, j).Value());
                             }
                             else
                             {
@@ -127,7 +129,8 @@ namespace SudokuSolver
                                     {
                                         randomNumber = rnd.Next(1, 10);
                                     }
-                                    nodeArray[CalculateRow(i, h), CalculateColumn(j, h)] = new SudokuNode(randomNumber, false);
+                                    nodeArray[CalculateRow(i), CalculateColumn(j)] = new SudokuNode(randomNumber, false);
+
                                     numbersAlreadyInBlock.Add(randomNumber);
                                 }
                             }
@@ -169,15 +172,14 @@ namespace SudokuSolver
             }
         }
 
-        private ((int i, int j) firstNode, (int k, int l) secondNode, int h, int diff) GenerateBestSuccessor()
+        private ((int i, int j) firstNode, (int k, int l) secondNode, int diff) GenerateBestSuccessor()
         {
-            int h;
             do
             {
-                h = rnd.Next(0, 9);
-            } while (plateauBlocks.Contains(h) && plateauBlocks.Count < 9);
+                this.currentBlockIndex = rnd.Next(0, 9);
+            } while (plateauBlocks.Contains(this.currentBlockIndex) && plateauBlocks.Count < 9);
 
-            ((int i, int j) firstNode, (int k, int l) secondNode, int h, int diff) bestSwap = default;
+            ((int i, int j) firstNode, (int k, int l) secondNode, int diff) bestSwap = default;
 
             //for loop for rows
             for (int i = 0; i < SudokuBlockSize; i++)
@@ -185,19 +187,19 @@ namespace SudokuSolver
                 //for loop for columns
                 for (int j = 0; j < SudokuBlockSize; j++)
                 {
-                    if (!GetNodeAtPosition(i, j, h).IsFixed())
+                    if (!GetNodeAtPosition(i, j).IsFixed())
                     {
                         for (int k = 0; k < SudokuBlockSize; k++)
                         {
                             for (int l = 0; l < SudokuBlockSize; l++)
                             {
                                 // check if node is not fixed and check that it's not equal to itself
-                                if (!GetNodeAtPosition(k, l, h).IsFixed() && !(i == k && j == l))
+                                if (!GetNodeAtPosition(k, l).IsFixed() && !(i == k && j == l))
                                 {
-                                    int currDiff = GetSwapEvaluation((i, j), (k, l), h);
+                                    int currDiff = GetSwapEvaluation((i, j), (k, l));
                                     if (bestSwap == default || currDiff >= bestSwap.diff)
                                     {
-                                        bestSwap = ((i, j), (k, l), h, currDiff);
+                                        bestSwap = ((i, j), (k, l), currDiff);
                                     }
                                 }
                             }
@@ -208,12 +210,12 @@ namespace SudokuSolver
             return bestSwap;
         }
 
-        private void ProcessBestSuccessor(((int i, int j) firstNode, (int k, int l) secondNode, int h, int diff) bestSwap)
+        private void ProcessBestSuccessor(((int i, int j) firstNode, (int k, int l) secondNode, int diff) bestSwap)
         {
             // BestSwap is worse
             if (bestSwap.diff < 0)
             {
-                plateauBlocks.Add(bestSwap.h);
+                plateauBlocks.Add(this.currentBlockIndex);
                 // Check if solved
                 if (plateauBlocks.Count == 9)
                 {
@@ -238,10 +240,10 @@ namespace SudokuSolver
                     {
                         this.subsequentZeroes = 0;
                     }
-                    SwapNodes(bestSwap.firstNode.i, bestSwap.firstNode.j, bestSwap.secondNode.k, bestSwap.secondNode.l, bestSwap.h);
+                    SwapNodes(bestSwap.firstNode.i, bestSwap.firstNode.j, bestSwap.secondNode.k, bestSwap.secondNode.l);
                     plateauBlocks.Clear();
-                    UpdateHeuristics(new List<int>() { CalculateRow(bestSwap.firstNode.i, bestSwap.h), CalculateRow(bestSwap.secondNode.k, bestSwap.h) }, true);
-                    UpdateHeuristics(new List<int>() { CalculateColumn(bestSwap.firstNode.j, bestSwap.h), CalculateColumn(bestSwap.secondNode.l, bestSwap.h) }, false);
+                    UpdateHeuristics(new List<int>() { CalculateRow(bestSwap.firstNode.i), CalculateRow(bestSwap.secondNode.k) }, true);
+                    UpdateHeuristics(new List<int>() { CalculateColumn(bestSwap.firstNode.j), CalculateColumn(bestSwap.secondNode.l) }, false);
                 }
 
             }
@@ -257,24 +259,24 @@ namespace SudokuSolver
             {
                 do
                 {
-                    h = rnd.Next(0, 9);
+                    this.currentBlockIndex = rnd.Next(0, 9);
                     i = rnd.Next(0, 3);
                     j = rnd.Next(0, 3);
                     k = rnd.Next(0, 3);
                     l = rnd.Next(0, 3);
-                } while (GetNodeAtPosition(i, j, h).IsFixed() || GetNodeAtPosition(k, l, h).IsFixed() || (i == k && j == l));
+                } while (GetNodeAtPosition(i, j).IsFixed() || GetNodeAtPosition(k, l).IsFixed() || (i == k && j == l));
 
-                SwapNodes(i, j, k, l, h);
+                SwapNodes(i, j, k, l);
 
-                UpdateHeuristics(new List<int>() { CalculateRow(i, h), CalculateRow(k, h)}, true);
-                UpdateHeuristics(new List<int>() { CalculateColumn(j, h), CalculateColumn(l, h)}, false);
+                UpdateHeuristics(new List<int>() { CalculateRow(i), CalculateRow(k)}, true);
+                UpdateHeuristics(new List<int>() { CalculateColumn(j), CalculateColumn(l)}, false);
             }
         }
 
-        private void SwapNodes(int i, int j, int k, int l, int h)
+        private void SwapNodes(int i, int j, int k, int l)
         {
-            (nodeArray[CalculateRow(i, h), CalculateColumn(j, h)], nodeArray[CalculateRow(k, h), CalculateColumn(l, h)]) =
-                    (nodeArray[CalculateRow(k, h), CalculateColumn(l, h)], nodeArray[CalculateRow(i, h), CalculateColumn(j, h)]);
+            (nodeArray[CalculateRow(i), CalculateColumn(j)], nodeArray[CalculateRow(k), CalculateColumn(l)]) =
+                    (nodeArray[CalculateRow(k), CalculateColumn(l)], nodeArray[CalculateRow(i), CalculateColumn(j)]);
         }
 
         private void EvaluateSudoku()
@@ -368,10 +370,10 @@ namespace SudokuSolver
             }
         }
 
-        private int GetSwapEvaluation((int i, int j) firstNode, (int k, int l) secondNode, int h)
+        private int GetSwapEvaluation((int i, int j) firstNode, (int k, int l) secondNode)
         {
-            int i = CalculateRow(firstNode.i, h), j = CalculateColumn(firstNode.j, h);
-            int k = CalculateRow(secondNode.k, h), l = CalculateColumn(secondNode.l, h);
+            int i = CalculateRow(firstNode.i), j = CalculateColumn(firstNode.j);
+            int k = CalculateRow(secondNode.k), l = CalculateColumn(secondNode.l);
             List<int> rows = new List<int>() { (i == k) ? i : i, k };
             List<int> cols = new List<int>() { (j == l) ? j : j, l };
 
@@ -380,14 +382,14 @@ namespace SudokuSolver
             currentEvaluationValue += GetLocalEvaluationValue(rows, true).Sum();
             currentEvaluationValue += GetLocalEvaluationValue(cols, false).Sum();
 
-            SwapNodes(firstNode.i, firstNode.j, secondNode.k, secondNode.l, h);
+            SwapNodes(firstNode.i, firstNode.j, secondNode.k, secondNode.l);
 
             // get sum of how much unique numbers are in the rows and columns after swapping 2 tiles
             int newEvaluationValue = 0;
             newEvaluationValue += GetLocalEvaluationValue(rows, true).Sum();
             newEvaluationValue += GetLocalEvaluationValue(cols, false).Sum();
 
-            SwapNodes(firstNode.i, firstNode.j, secondNode.k, secondNode.l, h);
+            SwapNodes(firstNode.i, firstNode.j, secondNode.k, secondNode.l);
 
             return currentEvaluationValue - newEvaluationValue;
         }

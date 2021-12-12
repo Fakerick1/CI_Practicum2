@@ -55,7 +55,7 @@ namespace SudokuSolver
                             // Create and show string with information on the solved sudoku
                             string line = $"{l},{sValues[j]},{plateauValues[k]},{sudoku.GetAmountOfSteps()}";
                             csv.AppendLine(line);
-                            Console.WriteLine(String.Format("Sudoku solved! Took: {0} steps. Iteration {1}/{2}. Solved sudoku:", sudoku.GetAmountOfSteps(), iterationCounter, maxIterations));
+                            if (SudokuSolver.PrintStartAndFinish) Console.WriteLine(String.Format("Sudoku solved! Took: {0} steps. Iteration {1}/{2}. Solved sudoku:", sudoku.GetAmountOfSteps(), iterationCounter, maxIterations));
                             if (SudokuSolver.PrintStartAndFinish) sudoku.PrintSudoku();
 
                         }

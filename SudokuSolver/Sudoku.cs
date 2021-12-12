@@ -182,6 +182,10 @@ namespace SudokuSolver
                 {
                     Console.WriteLine();
                 }
+                if (i == SudokuSize - 1 & SudokuSolver.PrettyPrint)
+                {
+                    Console.WriteLine("--------------------");
+                }
             }
         }
 

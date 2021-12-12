@@ -238,7 +238,7 @@ namespace SudokuSolver
                 // If there is no better successor in each of the 9 blocks, random walk
                 if (plateauBlocks.Count == 9)
                 {
-                    //if (this.printOutput) Console.WriteLine("Random walk, reason: plateaublocks = 9");
+                    if (SudokuSolver.PrintHeuristics) Console.WriteLine("Random walk, reason: plateaublocks = 9");
                     RandomWalk();
                     plateauBlocks.Clear();
                 }
@@ -251,7 +251,7 @@ namespace SudokuSolver
                 if (this.subsequentZeroes >= this.maxPlateauRepetitions)
                 {
                     // If a plateau has been reached and the algorithm is stuck on it for a predefined amount of steps, random walk
-                    //if (this.printOutput) Console.WriteLine("Random walk, reason: subsequent zeroes >= max");
+                    if (SudokuSolver.PrintHeuristics) Console.WriteLine("Random walk, reason: subsequent zeroes >= max");
                     RandomWalk();
                     this.subsequentZeroes = 0;
                 }

@@ -36,7 +36,6 @@ namespace SudokuSolver
                 Console.WriteLine("Run: {0}", i);
 
                 // Solve every given sudoku with a seeded random value for every combination of parameter values and save to csv
-                Random rnd = new Random();
                 int iterationCounter = 0;
                 for (int j = 0; j < sValues.Length; j++)
                 {
@@ -45,7 +44,7 @@ namespace SudokuSolver
                         for (int l = 0; l < inputs.Count; l++)
                         {
                             // Create sudoku with the current parameter configuration
-                            Sudoku sudoku = new Sudoku(inputs.ElementAt(l), sValues[j], plateauValues[k], rnd);
+                            Sudoku sudoku = new Sudoku(inputs.ElementAt(l), sValues[j], plateauValues[k], new Random(i));
                             if (SudokuSolver.PrintStartAndFinish) Console.WriteLine("Starting sudoku:");
                             if (SudokuSolver.PrintStartAndFinish) sudoku.PrintSudoku();
                             sudoku.Solve();
@@ -61,7 +60,7 @@ namespace SudokuSolver
                         }
                     }
                 }
-                Console.WriteLine("Elapsed: {0} seconds", (DateTime.Now - start).Seconds);
+                Console.WriteLine("Elapsed: {0} seconds", (DateTime.Now.Subtract(start)).TotalSeconds);
             }
             // Relative path to root folder
             File.WriteAllText("..\\..\\..\\result.csv", csv.ToString());

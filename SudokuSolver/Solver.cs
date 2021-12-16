@@ -30,10 +30,11 @@ namespace SudokuSolver
 
             int maxIterations = (sValues.Length * plateauValues.Length * inputs.Count);
             StringBuilder csv = new StringBuilder();
+            int sudokuTime = 0;
 
             for (int i = 0; i < amountOfRuns; i++)
             {
-                Console.WriteLine("Run: {0}", i);
+                Console.WriteLine("Run: {0}", i + 1);
 
                 // Solve every given sudoku with a seeded random value for every combination of parameter values and save to csv
                 int iterationCounter = 0;
@@ -49,7 +50,8 @@ namespace SudokuSolver
                             if (SudokuSolver.PrintStartAndFinish) Console.WriteLine("Starting sudoku:");
                             if (SudokuSolver.PrintStartAndFinish) sudoku.PrintSudoku();
                             sudoku.Solve();
-                            double sudokuTime = DateTime.Now.Subtract(startSudoku).TotalMilliseconds;
+
+                            sudokuTime = (int)DateTime.Now.Subtract(startSudoku).TotalMilliseconds;
                             iterationCounter++;
 
                             // Create and show string with information on the solved sudoku
@@ -57,11 +59,10 @@ namespace SudokuSolver
                             csv.AppendLine(line);
                             if (SudokuSolver.PrintStartAndFinish) Console.WriteLine(String.Format("Sudoku solved! Took: {0} steps. Iteration {1}/{2}. Solved sudoku:", sudoku.GetAmountOfSteps(), iterationCounter, maxIterations));
                             if (SudokuSolver.PrintStartAndFinish) sudoku.PrintSudoku();
-
                         }
                     }
                 }
-                Console.WriteLine("Elapsed: {0} seconds", (DateTime.Now.Subtract(start)).TotalSeconds);
+                if (SudokuSolver.PrintStartAndFinish) Console.WriteLine(String.Format("Run {0} took {1} milliseconds", i + 1, sudokuTime));
             }
             // Relative path to root folder
             File.WriteAllText("..\\..\\..\\result.csv", csv.ToString());

@@ -13,7 +13,7 @@ namespace SudokuSolver
         private int[] sValues;
         private int[] plateauValues;
 
-        public Solver(List<String> inputs) : this(inputs, 1, new int[] { 2 }, new int[] { 10 }) {
+        public Solver(List<String> inputs) : this(inputs, 1, new int[] { 5 }, new int[] { 10 }) {
         }
         
         public Solver(List<String> inputs, int amountOfRuns, int[] sValues, int[] plateauValues) 
@@ -44,15 +44,16 @@ namespace SudokuSolver
                         for (int l = 0; l < inputs.Count; l++)
                         {
                             // Create sudoku with the current parameter configuration
+                            DateTime startSudoku = DateTime.Now;
                             Sudoku sudoku = new Sudoku(inputs.ElementAt(l), sValues[j], plateauValues[k], new Random(i));
                             if (SudokuSolver.PrintStartAndFinish) Console.WriteLine("Starting sudoku:");
                             if (SudokuSolver.PrintStartAndFinish) sudoku.PrintSudoku();
                             sudoku.Solve();
-
+                            double sudokuTime = DateTime.Now.Subtract(startSudoku).TotalMilliseconds;
                             iterationCounter++;
 
                             // Create and show string with information on the solved sudoku
-                            string line = $"{l},{sValues[j]},{plateauValues[k]},{sudoku.GetAmountOfSteps()}";
+                            string line = $"{l},{sValues[j]},{plateauValues[k]},{sudoku.GetAmountOfSteps()},{sudokuTime}";
                             csv.AppendLine(line);
                             if (SudokuSolver.PrintStartAndFinish) Console.WriteLine(String.Format("Sudoku solved! Took: {0} steps. Iteration {1}/{2}. Solved sudoku:", sudoku.GetAmountOfSteps(), iterationCounter, maxIterations));
                             if (SudokuSolver.PrintStartAndFinish) sudoku.PrintSudoku();

@@ -33,9 +33,9 @@ namespace SudokuSolver
             inputs.Add(" 0 0 0 0 0 0 9 0 7 0 0 0 4 2 0 1 8 0 0 0 0 7 0 5 0 2 6 1 0 0 9 0 4 0 0 0 0 5 0 0 0 0 0 4 0 0 0 0 5 0 7 0 0 9 9 2 0 1 0 8 0 0 0 0 3 4 0 5 9 0 0 0 5 0 7 0 0 0 0 0 0");
 
             // Configuration values used in experiments/testing
-            int amountOfRuns = 100;
-            int[] sValues = new int[] { 3, 4, 5, 6 };
-            int[] plateauValues = new int[] { 6, 8, 10, 12, 14, 16, 18 };
+            int amountOfRuns = 5;
+            int[] sValues = new int[] { 5 };
+            int[] plateauValues = new int[] { 10 };
 
             // Set to true if sValues & plateauValues should be used, if false the sudokus added to the inputs list will be solved once with the given parameters
             bool runTests = true;

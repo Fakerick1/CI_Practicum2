@@ -10,11 +10,16 @@ namespace SudokuSolver
     {
         private int value;
         private bool isFixed;
+        List<int> allowedValues;
 
         public SudokuNode(int value, bool isFixed)
         {
             this.value = value;
             this.isFixed = isFixed;
+            if (!isFixed)
+            {
+                this.allowedValues = new List<int>(Enumerable.Range(1, Sudoku.SudokuSize));
+            }
         }
 
         public bool IsFixed()
@@ -25,6 +30,22 @@ namespace SudokuSolver
         public int Value()
         {
             return value;
+        }
+
+        public void RemoveValue(int value)
+        {
+            this.allowedValues.Remove(value);
+        }
+
+        public void AddValue(int value)
+        {
+            this.allowedValues.Add(value);
+            this.allowedValues.Sort();
+        }
+
+        public void SetFirstValue()
+        {
+            this.value = this.allowedValues.FirstOrDefault();
         }
     }
 }

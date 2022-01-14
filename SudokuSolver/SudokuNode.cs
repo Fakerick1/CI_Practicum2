@@ -47,5 +47,10 @@ namespace SudokuSolver
         {
             this.value = this.allowedValues.FirstOrDefault();
         }
+
+        public List<int> GetAllowedValues()
+        {
+            return allowedValues;
+        }
     }
 }

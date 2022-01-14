@@ -16,10 +16,12 @@ namespace SudokuSolver
         private int amountOfSteps;
         private int currentBlockIndex;
         private int correctNodes;
+        private List<ValueAssignment> changes;
 
         public Sudoku(string input)
         {
             this.nodeArray = new SudokuNode[SudokuSize, SudokuSize];
+            this.changes = new List<ValueAssignment>();
             this.amountOfSteps = 0;
 
             // Generate and display starting state
@@ -43,12 +45,30 @@ namespace SudokuSolver
                 // Loop through columns
                 for (int j = 0; j < SudokuSize; j++)
                 {
-                    nodeArray[i, j].SetFirstValue();
-                    EnsureLocalNodeConsistency(i, j, true);
+                    if (!nodeArray[i, j].IsFixed())
+                    {
+                        if (nodeArray[i, j].GetAllowedValues().Count == 0)
+                        {
+                            //reset last set value
+                            EnsureLocalNodeConsistency(i, j, true, true);
+                            if (j != 0)
+                            {
+                                j--;
+                            } else
+                            {
+                                i--;
+                                j = SudokuSize - 1;
+                            }
+                        }
+                        else
+                        {
+                            nodeArray[i, j].SetFirstValue();
+                            EnsureLocalNodeConsistency(i, j, true);
+                        }
+                        amountOfSteps++;
+                    }
                 }
-            }
-            amountOfSteps++;
-            
+            } 
         }
 
         public int GetAmountOfSteps()
@@ -56,22 +76,40 @@ namespace SudokuSolver
             return amountOfSteps;
         }
 
-        private void EnsureLocalNodeConsistency(int i, int j, bool keepTrack = false)
+        private void EnsureLocalNodeConsistency(int i, int j, bool keepTrack = false, bool undoStep = false)
         { 
             if (keepTrack)
             {
-                List<(int i, int j, int value)> changes = new List<(int i, int j, int value)>();
+                if (undoStep)
+                {
+                    changes.Remove(changes.Last());
+                } else
+                {
+                    changes.Add(new ValueAssignment(i, j, nodeArray[i, j].Value()));
+                }
             }
             // Loop door rijen en kolommen
             for (int k = 0; k < SudokuSize; k++)
             {
                 if (!this.nodeArray[i, k].IsFixed())
                 {
-                    this.nodeArray[i, k].RemoveValue(this.nodeArray[i, j].Value());
+                    if (undoStep)
+                    {
+                        this.nodeArray[i, k].AddValue(changes.Last().Value());
+                    } else
+                    {
+                        this.nodeArray[i, k].RemoveValue(this.nodeArray[i, j].Value());
+                    }
                 }
                 if (!this.nodeArray[k, j].IsFixed())
                 {
-                    this.nodeArray[k, j].RemoveValue(this.nodeArray[i, j].Value());
+                    if (undoStep)
+                    {
+                        this.nodeArray[k, j].AddValue(changes.Last().Value());
+                    } else
+                    {
+                        this.nodeArray[k, j].RemoveValue(this.nodeArray[i, j].Value());
+                    }
                 }
             }
             // Loop door blok
@@ -84,7 +122,13 @@ namespace SudokuSolver
                 {
                     if (!this.nodeArray[l, m].IsFixed())
                     {
-                        this.nodeArray[l, m].RemoveValue(this.nodeArray[i, j].Value());
+                        if (undoStep)
+                        {
+                            this.nodeArray[l, m].AddValue(changes.Last().Value());
+                        } else
+                        {
+                            this.nodeArray[l, m].RemoveValue(this.nodeArray[i, j].Value());
+                        }
                     }
                 }
             }
@@ -92,7 +136,6 @@ namespace SudokuSolver
 
         private void EnsureNodeConsistency()
         {
-
             // Loop through rows
             for (int i = 0; i < SudokuSize; i++)
             {

@@ -31,7 +31,11 @@ namespace SudokuSolver
 
                 sudokuTime = (int)DateTime.Now.Subtract(startSudoku).TotalMilliseconds;
 
+                Console.WriteLine();
+                Console.WriteLine();
                 if (SudokuSolver.PrintStartAndFinish) sudoku.PrintSudoku();
+
+                Console.ReadKey();
             }
         }
     }

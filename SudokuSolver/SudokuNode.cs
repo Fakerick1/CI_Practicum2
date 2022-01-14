@@ -32,9 +32,9 @@ namespace SudokuSolver
             return value;
         }
 
-        public void RemoveValue(int value)
+        public bool RemoveValue(int value)
         {
-            this.allowedValues.Remove(value);
+            return this.allowedValues.Remove(value);
         }
 
         public void AddValue(int value)
@@ -43,9 +43,10 @@ namespace SudokuSolver
             this.allowedValues.Sort();
         }
 
-        public void SetFirstValue()
+        public bool SetFirstValue()
         {
             this.value = this.allowedValues.FirstOrDefault();
+            return this.value != default;
         }
     }
 }

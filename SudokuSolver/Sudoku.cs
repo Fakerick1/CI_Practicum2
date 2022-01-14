@@ -12,6 +12,7 @@ namespace SudokuSolver
         public const int SudokuBlockSize = 3;
 
         private SudokuNode[,] nodeArray;
+        private Stack<DomainChangeList> changes;
 
         private int amountOfSteps;
         private int currentBlockIndex;
@@ -21,6 +22,7 @@ namespace SudokuSolver
         {
             this.nodeArray = new SudokuNode[SudokuSize, SudokuSize];
             this.amountOfSteps = 0;
+            this.changes = new Stack<DomainChangeList>();
 
             // Generate and display starting state
             ConvertInputToNodeArray(input);
@@ -43,12 +45,28 @@ namespace SudokuSolver
                 // Loop through columns
                 for (int j = 0; j < SudokuSize; j++)
                 {
-                    nodeArray[i, j].SetFirstValue();
-                    EnsureLocalNodeConsistency(i, j, true);
+                    if (!nodeArray[i, j].IsFixed())
+                    {
+                        if (nodeArray[i, j].SetFirstValue())
+                        {
+                            EnsureLocalNodeConsistency(i, j);
+                            correctNodes++;
+                        } else
+                        {                            
+                            (int row, int column) source = UndoLastStep();
+                            i = source.row; 
+                            j = source.column;
+                            correctNodes--;
+                        }
+                    }
+
+                    if (correctNodes == SudokuSize * SudokuSize)
+                    {
+                        Console.WriteLine("Congratulations, sudoku finished!");
+                    }
+                    amountOfSteps++;
                 }
-            }
-            amountOfSteps++;
-            
+            }          
         }
 
         public int GetAmountOfSteps()
@@ -56,22 +74,20 @@ namespace SudokuSolver
             return amountOfSteps;
         }
 
-        private void EnsureLocalNodeConsistency(int i, int j, bool keepTrack = false)
+        private void EnsureLocalNodeConsistency(int i, int j)
         { 
-            if (keepTrack)
-            {
-                List<(int i, int j, int value)> changes = new List<(int i, int j, int value)>();
-            }
+            DomainChangeList domainChanges = new DomainChangeList((i,j));
+            
             // Loop door rijen en kolommen
             for (int k = 0; k < SudokuSize; k++)
             {
                 if (!this.nodeArray[i, k].IsFixed())
                 {
-                    this.nodeArray[i, k].RemoveValue(this.nodeArray[i, j].Value());
+                    RemoveFromDomain(i, k, this.nodeArray[i, j].Value(), domainChanges);                    
                 }
                 if (!this.nodeArray[k, j].IsFixed())
                 {
-                    this.nodeArray[k, j].RemoveValue(this.nodeArray[i, j].Value());
+                    RemoveFromDomain(k, j, this.nodeArray[i, j].Value(), domainChanges);
                 }
             }
             // Loop door blok
@@ -84,15 +100,35 @@ namespace SudokuSolver
                 {
                     if (!this.nodeArray[l, m].IsFixed())
                     {
-                        this.nodeArray[l, m].RemoveValue(this.nodeArray[i, j].Value());
+                        RemoveFromDomain(l, m, this.nodeArray[i, j].Value(), domainChanges);
                     }
                 }
             }
+            changes.Push(domainChanges);
         }
 
+        private void RemoveFromDomain(int i, int j, int value, DomainChangeList domainChanges)
+        {
+            if (this.nodeArray[i, j].RemoveValue(value))
+            {
+                domainChanges.AddDomainChange(new DomainChange(i, j, value));
+            }
+        }
+
+        private (int i, int j) UndoLastStep()
+        {
+            DomainChangeList domainChanges = changes.Pop();
+
+            foreach (DomainChange domainChange in domainChanges.DomainChanges())
+            {
+                this.nodeArray[domainChange.Row(), domainChange.Column()].AddValue(domainChange.Value());
+            }
+
+            return domainChanges.Source();
+        }
+        
         private void EnsureNodeConsistency()
         {
-
             // Loop through rows
             for (int i = 0; i < SudokuSize; i++)
             {
@@ -106,6 +142,8 @@ namespace SudokuSolver
                     }
                 }
             }
+            //clear stack for fresh start of the CBT algorithm
+            changes.Clear();
         }
 
         //private SudokuNode GetNodeAtPosition(int i, int j)

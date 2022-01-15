@@ -52,10 +52,17 @@ namespace SudokuSolver
                             EnsureLocalNodeConsistency(i, j);
                             correctNodes++;
                         } else
-                        {                            
+                        {
                             (int row, int column) source = UndoLastStep();
-                            i = source.row; 
-                            j = source.column;
+                            if (source.column == 0)
+                            {
+                                i = source.row - 1;
+                                j = 8;
+                            } else
+                            {
+                                i = source.row;
+                                j = source.column - 1;
+                            }
                             correctNodes--;
                         }
                     }
@@ -122,6 +129,23 @@ namespace SudokuSolver
             foreach (DomainChange domainChange in domainChanges.DomainChanges())
             {
                 this.nodeArray[domainChange.Row(), domainChange.Column()].AddValue(domainChange.Value());
+            }
+
+            // Remove the not working value from the domain of the node and add it to the domainchanges list of the previous change
+            int i = domainChanges.Source().i;
+            int j = domainChanges.Source().j;
+            int value = this.nodeArray[i, j].Value();
+            if (changes.Count != 0)
+            {
+                DomainChangeList lastChanges = changes.Pop();
+                if (this.nodeArray[i, j].RemoveValue(value))
+                {
+                    lastChanges.AddDomainChange(new DomainChange(i, j, value));
+                }
+                changes.Push(lastChanges);
+            } else // When this is the first node, the value cannot and does not need to be added to the domainchanges list of the previous change
+            {
+                this.nodeArray[i, j].RemoveValue(value);
             }
 
             return domainChanges.Source();

@@ -15,7 +15,6 @@ namespace SudokuSolver
         private Stack<DomainChangeList> changes;
 
         private int amountOfSteps;
-        private int currentBlockIndex;
         private int correctNodes;
 
         public Sudoku(string input)
@@ -27,18 +26,13 @@ namespace SudokuSolver
             // Generate and display starting state
             ConvertInputToNodeArray(input);
 
-            // Knoopconsistentie Constraints aanmaken op nodeArray
+            // Ensure starting nodes are node-consistent
             EnsureNodeConsistency();
-            Console.WriteLine("Test"); 
         }
 
         public void Solve()
         {
-            // CBT
-            // de zoekboom wordt dynamisch gegenereerd door knopen in een
-            // depth - first volgorde te expanderen
-            // Loop vanaf links naar rechts en boven naar onder
-            // Als nieuw blad geen partiele oplossing biedt, haal uit allowedValues
+            // Use chronological backtracking by generating the nodes dynamically in depth-first order
             // Loop through rows
             for (int i = 0; i < SudokuSize; i++)
             {
@@ -66,14 +60,15 @@ namespace SudokuSolver
                             correctNodes--;
                         }
                     }
+                    if (SudokuSolver.PrettyPrint) PrintSudoku();
 
-                    if (correctNodes == SudokuSize * SudokuSize)
-                    {
-                        Console.WriteLine("Congratulations, sudoku finished!");
-                    }
                     amountOfSteps++;
                 }
-            }          
+            }
+            if (correctNodes != SudokuSize * SudokuSize)
+            {
+                Console.WriteLine("Sudoku was not finished correctly");
+            }
         }
 
         public int GetAmountOfSteps()
@@ -85,7 +80,7 @@ namespace SudokuSolver
         { 
             DomainChangeList domainChanges = new DomainChangeList((i,j));
             
-            // Loop door rijen en kolommen
+            // Loop through rows and columns
             for (int k = 0; k < SudokuSize; k++)
             {
                 if (!this.nodeArray[i, k].IsFixed())
@@ -97,7 +92,8 @@ namespace SudokuSolver
                     RemoveFromDomain(k, j, this.nodeArray[i, j].Value(), domainChanges);
                 }
             }
-            // Loop door blok
+
+            // Loop through 3*3 block
             int blockRowIndex = (i / SudokuBlockSize) * SudokuBlockSize;
             int blockColumnIndex = (j / SudokuBlockSize) * SudokuBlockSize;
 
@@ -126,15 +122,17 @@ namespace SudokuSolver
         {
             DomainChangeList domainChanges = changes.Pop();
 
+            // Undo changes to domains that occurred in this step
             foreach (DomainChange domainChange in domainChanges.DomainChanges())
             {
                 this.nodeArray[domainChange.Row(), domainChange.Column()].AddValue(domainChange.Value());
             }
 
-            // Remove the not working value from the domain of the node and add it to the domainchanges list of the previous change
+            // Remove the invalid value from the domain of the node and add it to the domainchanges list of the previous change
             int i = domainChanges.Source().i;
             int j = domainChanges.Source().j;
             int value = this.nodeArray[i, j].Value();
+
             if (changes.Count != 0)
             {
                 DomainChangeList lastChanges = changes.Pop();
@@ -143,8 +141,9 @@ namespace SudokuSolver
                     lastChanges.AddDomainChange(new DomainChange(i, j, value));
                 }
                 changes.Push(lastChanges);
-            } else // When this is the first node, the value cannot and does not need to be added to the domainchanges list of the previous change
+            } else
             {
+                // When this is the first node, the value cannot and does not need to be added to the domainchanges list of the previous change
                 this.nodeArray[i, j].RemoveValue(value);
             }
 
@@ -159,31 +158,17 @@ namespace SudokuSolver
                 // Loop through columns
                 for (int j = 0; j < SudokuSize; j++)
                 {
-                    // Als node isFixed, propageer value naar sudokuNodes die !isFixed zijn in zelfde rij, kolom, blok, haal uit allowedValues
+                    // If the node is Fixed, propagate the value to those sudokuNodes in nodeArray that are not fixed and are in the same row, column, or block
                     if (this.nodeArray[i, j].IsFixed())
                     {
                         EnsureLocalNodeConsistency(i, j);
                     }
                 }
             }
-            //clear stack for fresh start of the CBT algorithm
+            // Clear stack for fresh start of chronological backtracking
             changes.Clear();
         }
 
-        //private SudokuNode GetNodeAtPosition(int i, int j)
-        //{
-        //    return this.nodeArray[CalculateRow(i), CalculateColumn(j)];
-        //}
-
-        //private int CalculateRow(int i)
-        //{
-        //    return 3 * (this.currentBlockIndex / 3) + i;
-        //}
-
-        //private int CalculateColumn (int j)
-        //{
-        //    return 3 * (this.currentBlockIndex % 3) + j;
-        //}
 
         private void ConvertInputToNodeArray(string input)
         {
@@ -213,17 +198,7 @@ namespace SudokuSolver
                 {
                     Console.ForegroundColor = (this.nodeArray[i, j].IsFixed()) ? ConsoleColor.Blue : ConsoleColor.Black;
 
-                    //if (correctRows.Contains(i) && correctColumns.Contains(j))
-                    //{
-                    //    Console.BackgroundColor = ConsoleColor.Green;
-                    //} else if (correctRows.Contains(i) || correctColumns.Contains(j))
-                    //{
-                    //    Console.BackgroundColor = ConsoleColor.Yellow;
-                    //} else
-                    //{
-                    //    Console.BackgroundColor = ConsoleColor.Red;
-                    //}
-                    Console.BackgroundColor = ConsoleColor.Green;
+                    Console.BackgroundColor = (this.nodeArray[i, j].Value() == 0) ? ConsoleColor.Red : ConsoleColor.Green;
 
                     if (this.nodeArray[i, j] != null)
                     {
@@ -233,9 +208,11 @@ namespace SudokuSolver
                     {
                         Console.Write(0);
                     }
+                    
                     Console.Write(" ");
                     if (j % 3 == 2 && j != SudokuSize - 1)
                     {
+                        Console.BackgroundColor = ConsoleColor.Black;
                         Console.Write(" ");
                     }
 

@@ -6,17 +6,15 @@ namespace SudokuSolver
     {
         // Change these variables to determine how the output is printed to the console,
         // they are ordered in ascending order of impact on running time (no impact on the amount of cycles)
-
         // Prints a colored version of the sudoku at the start and at the finish, also shows how many steps it took
         public const bool PrintStartAndFinish = true;
 
         // Print the sudoku at every step
-        public const bool PrettyPrint = false;
+        public const bool PrettyPrint = true;
         // Black number = non-fixed node
         // Blue number = fixed node
-        // Red background = row incorrect, column incorrect
-        // Yellow background  = row or column correct
-        // Green background = both row and column correct
+        // Red background = value currently incorrect
+        // Green background = value currently believed to be correct
 
         static void Main(string[] args)
         {

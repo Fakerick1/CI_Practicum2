@@ -31,9 +31,11 @@ namespace SudokuSolver
 
                 sudokuTime = (int)DateTime.Now.Subtract(startSudoku).TotalMilliseconds;
 
-                Console.WriteLine();
-                Console.WriteLine();
-                if (SudokuSolver.PrintStartAndFinish) sudoku.PrintSudoku();
+                if (SudokuSolver.PrintStartAndFinish)
+                {
+                    Console.WriteLine("\nFinished! Took: {0} ms and {1} steps.", sudokuTime, sudoku.GetAmountOfSteps());
+                    sudoku.PrintSudoku();
+                }
             }
         }
     }

@@ -41,42 +41,26 @@ namespace SudokuSolver
                 {
                     if (!nodeArray[i, j].IsFixed())
                     {
+                        // Check if domain of current node is empty
                         if (!this.nodeArray[i, j].SetFirstValue())
                         {
                             correctNodes--;
                             (int row, int column) source = UndoLastStep();
-                            if (source.column == 0)
-                            {
-                                i = source.row - 1;
-                                j = 8;
-                            }
-                            else
-                            {
-                                i = source.row;
-                                j = source.column - 1;
-                            }
+                            i = source.row;
+                            j = source.column;
                         } else if (!EnsureLocalNodeConsistency(i, j))
                         {
                             (int row, int column) source = UndoLastStep();
-                            if (source.column == 0)
-                            {
-                                i = source.row - 1;
-                                j = 8;
-                            }
-                            else
-                            {
-                                i = source.row;
-                                j = source.column - 1;
-                            }
+                            i = source.row;
+                            j = source.column;
                         } else
                         {
                             correctNodes++;
                         }
-                        
-                    }
-                    if (SudokuSolver.PrettyPrint) PrintSudoku();
+                        if (SudokuSolver.PrettyPrint) PrintSudoku();
 
-                    amountOfSteps++;
+                        amountOfSteps++;
+                    }
                 }
             }
             if (correctNodes != SudokuSize * SudokuSize)
@@ -89,40 +73,6 @@ namespace SudokuSolver
         {
             return amountOfSteps;
         }
-
-        //private bool ForwardCheck(int i, int j)
-        //{
-        //    // Loop through rows and columns
-        //    for (int k = 0; k < SudokuSize; k++)
-        //    {
-        //        if (this.nodeArray[i, k].Value() == 0 && this.nodeArray[i, k].DomainIsEmpty())
-        //        {
-        //            return false;
-        //        }
-        //        if (this.nodeArray[k, j].Value() == 0 && this.nodeArray[k, j].DomainIsEmpty())
-        //        {
-        //            return false;
-        //        }
-        //    }
-
-        //    // Loop through 3*3 block
-        //    int blockRowIndex = (i / SudokuBlockSize) * SudokuBlockSize;
-        //    int blockColumnIndex = (j / SudokuBlockSize) * SudokuBlockSize;
-
-        //    for (int l = blockRowIndex; l < blockRowIndex + SudokuBlockSize; l++)
-        //    {
-        //        for (int m = blockColumnIndex; m < blockColumnIndex + SudokuBlockSize; m++)
-        //        {
-        //            if (this.nodeArray[l, m].Value() == 0 && this.nodeArray[l, m].DomainIsEmpty())
-        //            {
-        //                return false;
-        //            }
-        //        }
-        //    }
-
-        //    correctNodes++;
-        //    return true;
-        //}
 
         private bool EnsureLocalNodeConsistency(int i, int j)
         {
@@ -212,7 +162,8 @@ namespace SudokuSolver
                 this.nodeArray[i, j].RemoveValue(value, true);
             }
 
-            return domainChanges.Source();
+            // Return previous node taking into account if node is the last in the row
+            return (j == 0) ? (i - 1, 8) : (i, j - 1);
         }
         
         private void EnsureNodeConsistency()

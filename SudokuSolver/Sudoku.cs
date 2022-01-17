@@ -41,24 +41,38 @@ namespace SudokuSolver
                 {
                     if (!nodeArray[i, j].IsFixed())
                     {
-                        if (nodeArray[i, j].SetFirstValue())
+                        if (!this.nodeArray[i, j].SetFirstValue())
                         {
-                            EnsureLocalNodeConsistency(i, j);
-                            correctNodes++;
-                        } else
+                            correctNodes--;
+                            (int row, int column) source = UndoLastStep();
+                            if (source.column == 0)
+                            {
+                                i = source.row - 1;
+                                j = 8;
+                            }
+                            else
+                            {
+                                i = source.row;
+                                j = source.column - 1;
+                            }
+                        } else if (!EnsureLocalNodeConsistency(i, j))
                         {
                             (int row, int column) source = UndoLastStep();
                             if (source.column == 0)
                             {
                                 i = source.row - 1;
                                 j = 8;
-                            } else
+                            }
+                            else
                             {
                                 i = source.row;
                                 j = source.column - 1;
                             }
-                            correctNodes--;
+                        } else
+                        {
+                            correctNodes++;
                         }
+                        
                     }
                     if (SudokuSolver.PrettyPrint) PrintSudoku();
 
@@ -76,20 +90,64 @@ namespace SudokuSolver
             return amountOfSteps;
         }
 
-        private void EnsureLocalNodeConsistency(int i, int j)
-        { 
+        //private bool ForwardCheck(int i, int j)
+        //{
+        //    // Loop through rows and columns
+        //    for (int k = 0; k < SudokuSize; k++)
+        //    {
+        //        if (this.nodeArray[i, k].Value() == 0 && this.nodeArray[i, k].DomainIsEmpty())
+        //        {
+        //            return false;
+        //        }
+        //        if (this.nodeArray[k, j].Value() == 0 && this.nodeArray[k, j].DomainIsEmpty())
+        //        {
+        //            return false;
+        //        }
+        //    }
+
+        //    // Loop through 3*3 block
+        //    int blockRowIndex = (i / SudokuBlockSize) * SudokuBlockSize;
+        //    int blockColumnIndex = (j / SudokuBlockSize) * SudokuBlockSize;
+
+        //    for (int l = blockRowIndex; l < blockRowIndex + SudokuBlockSize; l++)
+        //    {
+        //        for (int m = blockColumnIndex; m < blockColumnIndex + SudokuBlockSize; m++)
+        //        {
+        //            if (this.nodeArray[l, m].Value() == 0 && this.nodeArray[l, m].DomainIsEmpty())
+        //            {
+        //                return false;
+        //            }
+        //        }
+        //    }
+
+        //    correctNodes++;
+        //    return true;
+        //}
+
+        private bool EnsureLocalNodeConsistency(int i, int j)
+        {
             DomainChangeList domainChanges = new DomainChangeList((i,j));
             
             // Loop through rows and columns
             for (int k = 0; k < SudokuSize; k++)
             {
-                if (!this.nodeArray[i, k].IsFixed())
+                if (this.nodeArray[i, k].Value() == 0)
                 {
-                    RemoveFromDomain(i, k, this.nodeArray[i, j].Value(), domainChanges);                    
+                    RemoveFromDomain(i, k, this.nodeArray[i, j].Value(), domainChanges);
+                    if (SudokuSolver.ForwardChecking && this.nodeArray[i, k].DomainIsEmpty())
+                    {
+                        changes.Push(domainChanges);
+                        return false;
+                    }
                 }
-                if (!this.nodeArray[k, j].IsFixed())
+                if (this.nodeArray[k, j].Value() == 0)
                 {
                     RemoveFromDomain(k, j, this.nodeArray[i, j].Value(), domainChanges);
+                    if (SudokuSolver.ForwardChecking && this.nodeArray[k, j].DomainIsEmpty())
+                    {
+                        changes.Push(domainChanges);
+                        return false;
+                    }
                 }
             }
 
@@ -101,13 +159,20 @@ namespace SudokuSolver
             {
                 for (int m = blockColumnIndex; m < blockColumnIndex + SudokuBlockSize; m++)
                 {
-                    if (!this.nodeArray[l, m].IsFixed())
+                    if (this.nodeArray[l, m].Value() == 0)
                     {
                         RemoveFromDomain(l, m, this.nodeArray[i, j].Value(), domainChanges);
+                        if (SudokuSolver.ForwardChecking && this.nodeArray[l, m].DomainIsEmpty())
+                        {
+                            changes.Push(domainChanges);
+                            return false;
+                        }
                     }
                 }
             }
+
             changes.Push(domainChanges);
+            return true;
         }
 
         private void RemoveFromDomain(int i, int j, int value, DomainChangeList domainChanges)
@@ -136,7 +201,7 @@ namespace SudokuSolver
             if (changes.Count != 0)
             {
                 DomainChangeList lastChanges = changes.Pop();
-                if (this.nodeArray[i, j].RemoveValue(value))
+                if (this.nodeArray[i, j].RemoveValue(value, true))
                 {
                     lastChanges.AddDomainChange(new DomainChange(i, j, value));
                 }
@@ -144,7 +209,7 @@ namespace SudokuSolver
             } else
             {
                 // When this is the first node, the value cannot and does not need to be added to the domainchanges list of the previous change
-                this.nodeArray[i, j].RemoveValue(value);
+                this.nodeArray[i, j].RemoveValue(value, true);
             }
 
             return domainChanges.Source();

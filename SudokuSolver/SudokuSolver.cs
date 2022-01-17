@@ -10,11 +10,13 @@ namespace SudokuSolver
         public const bool PrintStartAndFinish = true;
 
         // Print the sudoku at every step
-        public const bool PrettyPrint = true;
+        public const bool PrettyPrint = false;
         // Black number = non-fixed node
         // Blue number = fixed node
         // Red background = value currently incorrect
         // Green background = value currently believed to be correct
+
+        public const bool ForwardChecking = true;
 
         static void Main(string[] args)
         {

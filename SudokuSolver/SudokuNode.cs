@@ -32,8 +32,12 @@ namespace SudokuSolver
             return value;
         }
 
-        public bool RemoveValue(int value)
+        public bool RemoveValue(int value, bool resetValue = false)
         {
+            if (resetValue && this.value == value)
+            {
+                this.value = 0;
+            }
             return this.allowedValues.Remove(value);
         }
 
@@ -47,6 +51,11 @@ namespace SudokuSolver
         {
             this.value = this.allowedValues.FirstOrDefault();
             return this.value != default;
+        }
+
+        public bool DomainIsEmpty()
+        {
+            return this.allowedValues.Count == 0;
         }
     }
 }

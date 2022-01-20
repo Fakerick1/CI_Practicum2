@@ -20,6 +20,7 @@ namespace SudokuSolver
         public void Execute()
         {
             StringBuilder csv = new StringBuilder();
+            int sudokuTime = 0;
 
             for (int i = 0; i < amountOfRuns; i++)
             {
@@ -29,13 +30,13 @@ namespace SudokuSolver
                 for (int l = 0; l < inputs.Count; l++)
                 {
                     // Create sudoku with the current parameter configuration
-                    DateTime startSudoku = DateTime.Now;
                     Sudoku sudoku = new Sudoku(inputs.ElementAt(l));
                     if (SudokuSolver.PrintStartAndFinish) Console.WriteLine("Starting sudoku:");
                     if (SudokuSolver.PrintStartAndFinish) sudoku.PrintSudoku();
+                    DateTime startSudoku = DateTime.Now;
                     sudoku.Solve();
 
-                    int sudokuTime = (int)DateTime.Now.Subtract(startSudoku).TotalMilliseconds;
+                    sudokuTime = (int)DateTime.Now.Subtract(startSudoku).TotalMilliseconds;
 
                     // Write data to csv file
                     string line = $"{l},{sudoku.GetAmountOfSteps()},{sudokuTime}";

@@ -8,7 +8,7 @@ namespace SudokuSolver
         // They are ordered in ascending order of impact on running time (no impact on the amount of cycles)
 
         // Prints a colored version of the sudoku at the start and at the finish, also shows how many steps it took
-        public const bool PrintStartAndFinish = true;
+        public const bool PrintStartAndFinish = false;
 
         // Print the sudoku at every step
         public const bool PrettyPrint = false;
